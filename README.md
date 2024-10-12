@@ -1,16 +1,9 @@
 # note_tedd
 
-A new Flutter project.
+NoteTedd app is your all in one app and poses as a  teddy to help you record and capture what the lecturer is saying in class or what is being said in meetings or discussions and  translate it to English and write it under notes .
 
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+ The app will have an AI that will help organize it into topics , subtopics as well as filter out irrelevant content for example jokes and other moments when the speaker will digress.
+ 
+  The app will as well allow the user to choose between a meeting or a lecture. If the user chooses a lecture, they will at the end access suggested quiz questions by the AI according to the Course content. 
+  
+The app will have a convert to audio feature whereby the notes can be read to the user whenever they are doing something else for example washing dishes. 
