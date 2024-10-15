@@ -124,7 +124,7 @@ class _MainScreenState extends State<MainScreen> {
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.audiotrack),
-            label: 'Audio',
+            label: 'PlayNotes',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person),
@@ -132,7 +132,7 @@ class _MainScreenState extends State<MainScreen> {
           ),
         ],
         selectedItemColor: Colors.blue, // Customize active icon color
-        unselectedItemColor: Colors.grey, // Customize inactive icon color
+        unselectedItemColor: Colors.black, // Customize inactive icon color
         showUnselectedLabels: true, // Show labels even for unselected items
         type: BottomNavigationBarType.fixed, // Ensures all icons are displayed
       ),

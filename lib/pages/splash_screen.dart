@@ -11,7 +11,7 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    Timer(Duration(seconds: 3), () {
+    Timer(Duration(seconds: 5), () {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => LoginPage()),
       );
@@ -29,7 +29,7 @@ class _SplashScreenState extends State<SplashScreen> {
             Icon(
               Icons.pets, // Use a teddy bear icon from the Icon set
               size: 100,
-              color: Colors.white,
+              color: Colors.black,
             ),
             SizedBox(height: 20),
             Text(

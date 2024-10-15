@@ -13,11 +13,11 @@ class HomePage extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 40,
-                backgroundImage: AssetImage('assets/avatar.png'),
+                backgroundImage: AssetImage('../assets/avatar.png'),
               ),
               SizedBox(width: 20),
               Text(
-                'Hi, User!',
+                'Hi, Joe!',
                 style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
               ),
             ],
@@ -26,8 +26,8 @@ class HomePage extends StatelessWidget {
 
           // Stats Section
           Text(
-            'Your Progress',
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            'Your stats for the week',
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
           SizedBox(height: 10),
           Row(
