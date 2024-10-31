@@ -1,10 +1,50 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart'; // For fancy fonts
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:google_fonts/google_fonts.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
+  @override
+  _HomePageState createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  String username = 'User';
+  String email = '';
+  String userType = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _getUserData();
+  }
+
+  Future<void> _getUserData() async {
+    User? user = _auth.currentUser;
+
+    if (user != null) {
+      DocumentSnapshot userDoc =
+          await _firestore.collection('users').doc(user.uid).get();
+      if (userDoc.exists) {
+        setState(() {
+          username = userDoc['username'] ?? 'User';
+          email = userDoc['email'] ?? 'No email';
+          userType = userDoc['type'] ?? 'N/A';
+        });
+      }
+    }
+  }
+
+  void _logout() async {
+    await _auth.signOut();
+    Navigator.pushReplacementNamed(context, '/login');
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Get the screen size to make the layout responsive
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmallScreen =
         screenWidth < 600; // Define small screens (e.g. phones)
@@ -17,6 +57,12 @@ class HomePage extends StatelessWidget {
         ),
         backgroundColor: Colors.blueAccent,
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.logout),
+            onPressed: _logout, // Log out function
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(
@@ -38,7 +84,7 @@ class HomePage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Hi, Joe!',
+                      'Hi, $username!',
                       style: GoogleFonts.poppins(
                         fontSize:
                             isSmallScreen ? 24 : 28, // Responsive font size
@@ -51,6 +97,21 @@ class HomePage extends StatelessWidget {
                         fontSize:
                             isSmallScreen ? 14 : 16, // Responsive font size
                         color: Colors.grey[700],
+                      ),
+                    ),
+                    SizedBox(height: 5),
+                    Text(
+                      'Email: $email',
+                      style: GoogleFonts.poppins(
+                        fontSize: isSmallScreen ? 12 : 14,
+                        color: Colors.grey[500],
+                      ),
+                    ),
+                    Text(
+                      'Type: $userType',
+                      style: GoogleFonts.poppins(
+                        fontSize: isSmallScreen ? 12 : 14,
+                        color: Colors.grey[500],
                       ),
                     ),
                   ],
@@ -144,7 +205,6 @@ class HomePage extends StatelessWidget {
       // Floating Action Button for recording a lesson
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
-          // Functionality for recording a lesson goes here
           _showRecordLessonDialog(context);
         },
         backgroundColor: Colors.blueAccent,
@@ -238,8 +298,7 @@ class HomePage extends StatelessWidget {
                 label: Text('Start Recording',
                     style: GoogleFonts.poppins(color: Colors.white)),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors
-                      .blueAccent, // Updated from `primary` to `backgroundColor`
+                  backgroundColor: Colors.blueAccent,
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10)),
                 ),

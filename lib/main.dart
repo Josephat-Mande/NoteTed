@@ -4,9 +4,15 @@ import 'pages/notes_page.dart';
 import 'pages/quizzes_page.dart';
 import 'pages/audio_page.dart';
 import 'pages/profile_page.dart';
+import 'package:firebase_core/firebase_core.dart'; // Required for Firebase initialization
+import 'package:firebase_auth/firebase_auth.dart'; // Firebase Auth package
+import 'pages/login_page.dart'; // Login page for unauthenticated users
+import 'pages/signup_page.dart';
 import 'dart:async'; // Required for timer in Splash Screen
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(); // Initialize Firebase
   runApp(NoteTeddApp());
 }
 
@@ -18,7 +24,19 @@ class NoteTeddApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: SplashScreen(), // Start with the splash screen
+      home: SplashScreen(),
+      // Start with the splash screen
+
+      routes: {
+        '/signup': (context) => SignUpPage(),
+        '/login': (context) => LoginPage(), // Login page for unauthenticated users
+        '/home': (context) => HomePage(),
+        '/notes': (context) => NotesPage(),
+        '/quizzes': (context) => QuizzesPage(),
+        '/audio': (context) => AudioPage(),
+        '/profile': (context) => ProfilePage(),
+        // other routes
+      },
     );
   }
 }
@@ -32,12 +50,29 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    Timer(Duration(seconds: 3), () {
+    _checkAuthentication(); // Check if the user is authenticated
+  }
+
+  void _checkAuthentication() async {
+    await Future.delayed(Duration(seconds: 3)); // Wait for 3 seconds
+
+    // Get the current user from Firebase
+    User? user = FirebaseAuth.instance.currentUser;
+
+    // Navigate to the appropriate screen based on authentication status
+    if (user == null) {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
-            builder: (_) => MainScreen()), // Navigate to main screen
+            builder: (_) =>
+                LoginPage()), // Navigate to login page if unauthenticated
       );
-    });
+    } else {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+            builder: (_) =>
+                MainScreen()), // Navigate to main screen if authenticated
+      );
+    }
   }
 
   @override
@@ -102,9 +137,26 @@ class _MainScreenState extends State<MainScreen> {
     });
   }
 
+  void _logout() async {
+    await FirebaseAuth.instance.signOut(); // Firebase logout
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+          builder: (_) => LoginPage()), // Navigate back to login page
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: Text('NoteTedd'),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.logout),
+            onPressed: _logout, // Logout functionality
+          ),
+        ],
+      ),
       body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,

@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class SignUpPage extends StatefulWidget {
@@ -7,6 +9,46 @@ class SignUpPage extends StatefulWidget {
 
 class _SignUpPageState extends State<SignUpPage> {
   String _selectedOption = 'Lecture';
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  bool _isLoading = false;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  void _signUp() async {
+    setState(() {
+      _isLoading = true;
+    });
+    try {
+      // Create a new user with Firebase Auth
+      UserCredential userCredential =
+          await _auth.createUserWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
+
+      // Save user info to Firestore
+      await _firestore.collection('users').doc(userCredential.user!.uid).set({
+        'email': _emailController.text.trim(),
+        'phone': _phoneController.text.trim(),
+        'username': _usernameController.text.trim(),
+        'type': _selectedOption,
+      });
+
+      // Navigate to the login page after successful signup
+      Navigator.pushReplacementNamed(context, '/login');
+    } on FirebaseAuthException catch (e) {
+      print('Error: $e');
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(e.message!)));
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -23,6 +65,7 @@ class _SignUpPageState extends State<SignUpPage> {
             ),
             SizedBox(height: 20),
             TextField(
+              controller: _emailController,
               decoration: InputDecoration(
                 labelText: 'Email',
                 border: OutlineInputBorder(),
@@ -30,6 +73,7 @@ class _SignUpPageState extends State<SignUpPage> {
             ),
             SizedBox(height: 20),
             TextField(
+              controller: _phoneController,
               decoration: InputDecoration(
                 labelText: 'Phone Number',
                 border: OutlineInputBorder(),
@@ -37,8 +81,18 @@ class _SignUpPageState extends State<SignUpPage> {
             ),
             SizedBox(height: 20),
             TextField(
+              controller: _usernameController,
               decoration: InputDecoration(
                 labelText: 'Username',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            SizedBox(height: 20),
+            TextField(
+              controller: _passwordController,
+              obscureText: true,
+              decoration: InputDecoration(
+                labelText: 'Password',
                 border: OutlineInputBorder(),
               ),
             ),
@@ -62,12 +116,12 @@ class _SignUpPageState extends State<SignUpPage> {
               },
             ),
             SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                // Add sign-up functionality here
-              },
-              child: Text('Sign Up'),
-            ),
+            _isLoading
+                ? CircularProgressIndicator()
+                : ElevatedButton(
+                    onPressed: _signUp,
+                    child: Text('Sign Up'),
+                  ),
           ],
         ),
       ),
