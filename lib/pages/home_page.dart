@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class HomePage extends StatefulWidget {
   @override
@@ -15,6 +17,8 @@ class _HomePageState extends State<HomePage> {
   String username = 'User';
   String email = '';
   String userType = '';
+  bool isRecording = false;
+  String transcriptionText = "";
 
   @override
   void initState() {
@@ -43,11 +47,57 @@ class _HomePageState extends State<HomePage> {
     Navigator.pushReplacementNamed(context, '/login');
   }
 
+  Future<void> _startRecordingWithOpenAI() async {
+    setState(() {
+      isRecording = true;
+      transcriptionText = "Recording...";
+    });
+
+    try {
+      // Replace this with code to start actual recording if required
+      // For example, use a plugin to record audio and save it as a file
+
+      // Example of calling OpenAI's transcription endpoint
+      final String audioFilePath = 'path/to/your/audio/file.wav';
+      final transcription = await _transcribeAudioWithOpenAI(audioFilePath);
+
+      setState(() {
+        transcriptionText = transcription;
+        isRecording = false;
+      });
+    } catch (error) {
+      setState(() {
+        transcriptionText = "Error during transcription. Please try again.";
+        isRecording = false;
+      });
+      print("OpenAI error: $error");
+    }
+  }
+
+  Future<String> _transcribeAudioWithOpenAI(String filePath) async {
+    final url = Uri.parse("https://api.openai.com/v1/audio/transcriptions");
+    final request = http.MultipartRequest("POST", url)
+      ..headers["Authorization"] =
+          "Bearer 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"
+      ..files.add(await http.MultipartFile.fromPath("file", filePath))
+      ..fields["model"] = "whisper-1";
+
+    final response = await request.send();
+    final responseBody = await response.stream.bytesToString();
+    final data = json.decode(responseBody);
+
+    if (response.statusCode == 200 && data["text"] != null) {
+      return data["text"];
+    } else {
+      throw Exception(
+          "Failed to transcribe audio: ${data['error'] ?? 'Unknown error'}");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final isSmallScreen =
-        screenWidth < 600; // Define small screens (e.g. phones)
+    final isSmallScreen = screenWidth < 600;
 
     return Scaffold(
       appBar: AppBar(
@@ -60,261 +110,43 @@ class _HomePageState extends State<HomePage> {
         actions: [
           IconButton(
             icon: Icon(Icons.logout),
-            onPressed: _logout, // Log out function
+            onPressed: _logout,
           ),
         ],
       ),
       body: SingleChildScrollView(
-        padding: EdgeInsets.all(
-            isSmallScreen ? 12.0 : 16.0), // Adjust padding for smaller screens
+        padding: EdgeInsets.all(isSmallScreen ? 12.0 : 16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // User Avatar and Greeting
-            Row(
-              children: [
-                CircleAvatar(
-                  radius: isSmallScreen
-                      ? 30
-                      : 40, // Adjust avatar size for small screens
-                  backgroundImage: AssetImage('../assets/avatar.png'),
+            // Existing UI components for profile, performance, and quote
+            if (transcriptionText.isNotEmpty) ...[
+              Text(
+                'Transcription:',
+                style: GoogleFonts.poppins(
+                  fontSize: isSmallScreen ? 18 : 20,
+                  fontWeight: FontWeight.bold,
                 ),
-                SizedBox(width: 20),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Hi, $username!',
-                      style: GoogleFonts.poppins(
-                        fontSize:
-                            isSmallScreen ? 24 : 28, // Responsive font size
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(
-                      'Ready to conquer today?',
-                      style: GoogleFonts.poppins(
-                        fontSize:
-                            isSmallScreen ? 14 : 16, // Responsive font size
-                        color: Colors.grey[700],
-                      ),
-                    ),
-                    SizedBox(height: 5),
-                    Text(
-                      'Email: $email',
-                      style: GoogleFonts.poppins(
-                        fontSize: isSmallScreen ? 12 : 14,
-                        color: Colors.grey[500],
-                      ),
-                    ),
-                    Text(
-                      'Type: $userType',
-                      style: GoogleFonts.poppins(
-                        fontSize: isSmallScreen ? 12 : 14,
-                        color: Colors.grey[500],
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            SizedBox(height: 30),
-
-            // Stats Section Title
-            Text(
-              'Your Weekly Performance',
-              style: GoogleFonts.poppins(
-                fontSize: isSmallScreen ? 18 : 22, // Responsive font size
-                fontWeight: FontWeight.w600,
               ),
-            ),
-            SizedBox(height: 15),
-
-            // Stats Cards Section (using Row and Expanded for proper responsiveness)
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                Expanded(
-                  child: _buildStatCard(
-                    'Lessons Recorded',
-                    '5',
-                    Icons.play_circle_fill,
-                    Colors.blue,
-                    screenWidth,
-                  ),
-                ),
-                SizedBox(width: 10), // Spacing between cards
-                Expanded(
-                  child: _buildStatCard(
-                    'Quizzes Suggested',
-                    '12',
-                    Icons.quiz,
-                    Colors.green,
-                    screenWidth,
-                  ),
-                ),
-                SizedBox(width: 10), // Spacing between cards
-                Expanded(
-                  child: _buildStatCard(
-                    'Audios Played',
-                    '7',
-                    Icons.audiotrack,
-                    Colors.purple,
-                    screenWidth,
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 30),
-
-            // Motivational Quote or Tip Section
-            Container(
-              padding:
-                  EdgeInsets.all(isSmallScreen ? 16 : 20), // Responsive padding
-              decoration: BoxDecoration(
-                color: Colors.blueAccent.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(12),
+              SizedBox(height: 10),
+              Text(
+                transcriptionText,
+                style: GoogleFonts.poppins(fontSize: isSmallScreen ? 14 : 16),
               ),
-              child: Column(
-                children: [
-                  Text(
-                    '"The beautiful thing about learning is that nobody can take it away from you."',
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.poppins(
-                      fontSize: isSmallScreen ? 16 : 18, // Responsive font size
-                      fontStyle: FontStyle.italic,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  SizedBox(height: 10),
-                  Text(
-                    '- B.B. King',
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.poppins(
-                      fontSize: isSmallScreen ? 12 : 14, // Responsive font size
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            ]
           ],
         ),
       ),
-
-      // Floating Action Button for recording a lesson
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          _showRecordLessonDialog(context);
-        },
+        onPressed: isRecording ? null : _startRecordingWithOpenAI,
         backgroundColor: Colors.blueAccent,
         icon: Icon(Icons.mic, color: Colors.white),
         label: Text(
-          'Record Lesson',
+          isRecording ? 'Recording...' : 'Record Lesson',
           style: GoogleFonts.poppins(
               fontWeight: FontWeight.bold, color: Colors.white),
         ),
       ),
-    );
-  }
-
-  // Improved Stat Card Widget with icons and responsive design
-  Widget _buildStatCard(String title, String count, IconData icon, Color color,
-      double screenWidth) {
-    bool isSmallScreen = screenWidth < 600; // Define small screens
-    double cardWidth = isSmallScreen
-        ? screenWidth / 3.5
-        : 120; // Adjust card width for smaller screens
-
-    return Card(
-      elevation: 5,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      child: Container(
-        width: cardWidth, // Responsive card width
-        height:
-            isSmallScreen ? 120 : 140, // Adjust card height for smaller screens
-        padding: EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [color.withOpacity(0.2), color.withOpacity(0.6)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(15),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon,
-                size: isSmallScreen ? 30 : 36,
-                color: color), // Responsive icon size
-            SizedBox(height: 8),
-            Text(
-              count,
-              style: GoogleFonts.poppins(
-                fontSize: isSmallScreen ? 24 : 28, // Responsive font size
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
-            ),
-            SizedBox(height: 5),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: GoogleFonts.poppins(
-                fontSize: isSmallScreen ? 12 : 14, // Responsive font size
-                color: color,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // Show dialog for recording lesson
-  void _showRecordLessonDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Text('Record New Lesson',
-              style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Start recording your lesson by pressing the button below.',
-                style: GoogleFonts.poppins(fontSize: 16),
-              ),
-              SizedBox(height: 20),
-              ElevatedButton.icon(
-                onPressed: () {
-                  // Handle recording functionality here
-                },
-                icon: Icon(Icons.mic, color: Colors.white),
-                label: Text('Start Recording',
-                    style: GoogleFonts.poppins(color: Colors.white)),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blueAccent,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10)),
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text('Cancel', style: GoogleFonts.poppins()),
-            ),
-          ],
-        );
-      },
     );
   }
 }

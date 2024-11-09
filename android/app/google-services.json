@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "161268884450",
+    "project_id": "notetedd",
+    "storage_bucket": "notetedd.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:161268884450:android:c884aef5bdb29f1aa0cfbb",
+        "android_client_info": {
+          "package_name": "com.notetedd.notetedd"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC_0vMABd4QGno8QTuYBSukDkLe1nEZxhI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

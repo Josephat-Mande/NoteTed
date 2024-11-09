@@ -34,6 +34,10 @@ dependencies:
   firebase_core: 3.6.0
   firebase_auth: ^5.3.1
   cloud_firestore: ^5.4.4
+  http: 1.2.2
+  permission_handler: 
+  path_provider: 
+  flutter_sound:   # For recording audio
 
 
     
